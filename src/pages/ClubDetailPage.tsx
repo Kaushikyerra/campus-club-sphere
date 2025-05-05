@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { 
   Tabs, 
   TabsContent, 
@@ -22,6 +22,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 import EventCard from '@/components/events/EventCard';
 
@@ -130,9 +132,10 @@ const mockClubDetails = {
 
 const ClubDetailPage = () => {
   const { clubId } = useParams<{ clubId: string }>();
-  // For demo purposes, assume user is not authenticated
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   
   // In a real app, you'd fetch this data from an API
   const club = mockClubDetails[clubId as keyof typeof mockClubDetails];
@@ -156,12 +159,19 @@ const ClubDetailPage = () => {
     if (isAuthenticated) {
       // In a real app, you'd make an API call to join the club
       console.log("Joining club:", club.id);
-      // Demo: Show success message, etc.
+      // Show success message
+      toast({
+        title: "Success!",
+        description: `You've joined ${club.name}!`,
+      });
     } else {
       // Show auth modal for unauthenticated users
       setShowAuthModal(true);
     }
   };
+
+  // Log authentication state for debugging
+  console.log("Authentication state:", { isAuthenticated });
 
   return (
     <div>
@@ -409,21 +419,21 @@ const ClubDetailPage = () => {
             <Button 
               variant="outline" 
               className="flex-1" 
-              asChild
-              onClick={() => setShowAuthModal(false)}
+              onClick={() => {
+                setShowAuthModal(false);
+                navigate('/signup');
+              }}
             >
-              <Link to="/signup">
-                Create Account
-              </Link>
+              Create Account
             </Button>
             <Button 
               className="flex-1" 
-              asChild
-              onClick={() => setShowAuthModal(false)}
+              onClick={() => {
+                setShowAuthModal(false);
+                navigate('/login');
+              }}
             >
-              <Link to="/login">
-                Sign In
-              </Link>
+              Sign In
             </Button>
           </DialogFooter>
         </DialogContent>

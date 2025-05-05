@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -14,7 +14,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Login Page Schema
 const loginSchema = z.object({
@@ -23,8 +23,9 @@ const loginSchema = z.object({
 });
 
 export const LoginPage = () => {
-  const { toast } = useToast();
+  const { signIn, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -34,18 +35,22 @@ export const LoginPage = () => {
     },
   });
 
-  const onSubmit = (data: z.infer<typeof loginSchema>) => {
-    // Here you would typically make an API call to authenticate the user
-    console.log("Login attempt:", data);
-    
-    // Mock successful login
-    toast({
-      title: "Login successful",
-      description: "Welcome back to UniClubs!",
-    });
-    
-    // Redirect to dashboard (in a real app, this would happen after successful authentication)
-    setTimeout(() => navigate('/clubs'), 1500);
+  useEffect(() => {
+    // If user is already authenticated, redirect to clubs page
+    if (isAuthenticated) {
+      navigate('/clubs');
+    }
+  }, [isAuthenticated, navigate]);
+
+  const onSubmit = async (data: z.infer<typeof loginSchema>) => {
+    try {
+      setIsSubmitting(true);
+      await signIn(data.email, data.password);
+      // The auth state change will trigger redirection
+    } catch (error) {
+      console.error("Login error:", error);
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -100,8 +105,8 @@ export const LoginPage = () => {
                 )}
               />
               
-              <Button type="submit" className="w-full">
-                Sign in
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
+                {isSubmitting ? "Signing in..." : "Sign in"}
               </Button>
             </form>
           </Form>
@@ -129,8 +134,9 @@ const signupSchema = z.object({
 });
 
 export const SignupPage = () => {
-  const { toast } = useToast();
+  const { signUp, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<z.infer<typeof signupSchema>>({
     resolver: zodResolver(signupSchema),
@@ -141,18 +147,22 @@ export const SignupPage = () => {
     },
   });
 
-  const onSubmit = (data: z.infer<typeof signupSchema>) => {
-    // Here you would typically make an API call to register the user
-    console.log("Signup attempt:", data);
-    
-    // Mock successful registration
-    toast({
-      title: "Account created",
-      description: "Welcome to UniClubs! Your account has been created successfully.",
-    });
-    
-    // Redirect to dashboard (in a real app, this would happen after successful registration)
-    setTimeout(() => navigate('/clubs'), 1500);
+  useEffect(() => {
+    // If user is already authenticated, redirect to clubs page
+    if (isAuthenticated) {
+      navigate('/clubs');
+    }
+  }, [isAuthenticated, navigate]);
+
+  const onSubmit = async (data: z.infer<typeof signupSchema>) => {
+    try {
+      setIsSubmitting(true);
+      await signUp(data.email, data.password, data.name);
+      // We'll redirect automatically through the auth state change
+    } catch (error) {
+      console.error("Signup error:", error);
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -213,8 +223,8 @@ export const SignupPage = () => {
                 )}
               />
               
-              <Button type="submit" className="w-full">
-                Sign up
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
+                {isSubmitting ? "Creating account..." : "Sign up"}
               </Button>
             </form>
           </Form>
