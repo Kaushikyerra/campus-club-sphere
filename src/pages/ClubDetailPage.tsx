@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { 
   Tabs, 
@@ -15,6 +14,14 @@ import {
   Clock,
   MapPin
 } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 import EventCard from '@/components/events/EventCard';
 
@@ -123,11 +130,15 @@ const mockClubDetails = {
 
 const ClubDetailPage = () => {
   const { clubId } = useParams<{ clubId: string }>();
+  // For demo purposes, assume user is not authenticated
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   
   // In a real app, you'd fetch this data from an API
   const club = mockClubDetails[clubId as keyof typeof mockClubDetails];
   
   if (!club) {
+    // ... keep existing code (club not found message)
     return (
       <div className="container py-16 px-4 text-center">
         <h2 className="text-2xl font-bold mb-4">Club Not Found</h2>
@@ -141,10 +152,22 @@ const ClubDetailPage = () => {
     );
   }
 
+  const handleJoinClub = () => {
+    if (isAuthenticated) {
+      // In a real app, you'd make an API call to join the club
+      console.log("Joining club:", club.id);
+      // Demo: Show success message, etc.
+    } else {
+      // Show auth modal for unauthenticated users
+      setShowAuthModal(true);
+    }
+  };
+
   return (
     <div>
       {/* Club Header */}
       <div className="relative">
+        {/* ... keep existing code (club header image and details) */}
         <div className="h-64 md:h-80 bg-muted overflow-hidden">
           {club.imageUrl ? (
             <img 
@@ -186,13 +209,14 @@ const ClubDetailPage = () => {
             </div>
             
             <div>
-              <Button size="lg">Join Club</Button>
+              <Button size="lg" onClick={handleJoinClub}>Join Club</Button>
             </div>
           </div>
         </div>
       </div>
       
       {/* Club Content */}
+      {/* ... keep existing code (club content tabs, about section, events, members) */}
       <div className="container px-4 pb-16">
         <Tabs defaultValue="about" className="space-y-8">
           <TabsList>
@@ -279,7 +303,7 @@ const ClubDetailPage = () => {
                     <div className="flex items-start gap-3">
                       <div className="flex-shrink-0 h-[18px] w-[18px] flex items-center justify-center text-muted-foreground mt-0.5">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M22 12H2M22 12C22 17.5228 17.5228 22 12 22M22 12C22 6.47715 17.5228 2 12 2M2 12C2 17.5228 6.47715 22 12 22M2 12C2 6.47715 6.47715 2 12 2M12 2V22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                          <path d="M22 12H2M22 12C22 17.5228 17.5228 22 12 22M22 12C22 6.47715 17.5228 2 12 2M2 12C2 17.5228 6.47715 22 12 22M2 12C2 6.47715 6.47715 2 12 2M12 2V22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
                       </div>
                       <div>
@@ -364,6 +388,46 @@ const ClubDetailPage = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Authentication Modal */}
+      <Dialog open={showAuthModal} onOpenChange={setShowAuthModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Sign in required</DialogTitle>
+            <DialogDescription>
+              You need to be signed in to join {club.name}.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="flex flex-col gap-4 py-4">
+            <p className="text-muted-foreground">
+              Please sign in to your existing account or create a new account to join this club.
+            </p>
+          </div>
+          
+          <DialogFooter className="flex flex-col sm:flex-row gap-2">
+            <Button 
+              variant="outline" 
+              className="flex-1" 
+              asChild
+              onClick={() => setShowAuthModal(false)}
+            >
+              <Link to="/signup">
+                Create Account
+              </Link>
+            </Button>
+            <Button 
+              className="flex-1" 
+              asChild
+              onClick={() => setShowAuthModal(false)}
+            >
+              <Link to="/login">
+                Sign In
+              </Link>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
